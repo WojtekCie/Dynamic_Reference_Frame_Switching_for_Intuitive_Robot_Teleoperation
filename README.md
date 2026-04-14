@@ -1,7 +1,7 @@
-# Advanced Teleoperation Control for Redundant Manipulators (Kinova Gen3)
+# Advanced Teleoperation Control for Redundant Manipulators
 
 ## 📌 Project Overview
-This project focuses on developing an advanced teleoperation algorithm for robotic manipulators (specifically 6-DOF and 7-DOF Kinova Gen3). The primary goal is to reduce the operator's cognitive load and improve precision in complex, remote manipulation tasks. 
+This project focuses on developing an advanced teleoperation algorithm for robotic manipulators (specifically 6-DOF). The primary goal is to reduce the operator's cognitive load and improve precision in complex, remote manipulation tasks. 
 
 The system implements Closed-Loop Inverse Kinematics (**CLIK**), dynamic on-the-fly **Reference Frame Switching**, and mathematical singularity avoidance using the **Damped Least Squares (DLS)** method.
 
@@ -13,10 +13,10 @@ In tasks requiring high precision and direct environmental contact (e.g., peg-in
 ### 2. The Problem of Camera Frame Misalignment
 Despite the advantages of an arm-mounted camera, directly implementing an Eye-in-Hand view while leaving the control frame (joystick) mapped to the **Robot Base Frame** leads to drastic performance degradation. 
 
-As explicitly proven by the authors in the article *"An Experimental Study on the Effects of Control Frame and View in Robot Teleoperation"*, visual-motor misalignment causes immense disorientation. The operator must perform mental rotation matrix transformations in real-time, leading to frequent collisions. Recent studies also confirm this: failing to correct the reference frame for an Eye-in-Hand camera increases task completion time, increases unsteadiness by almost 50%, and raises the operator's mental stress by over 60%.
+As explicitly proven by the authors in the article [*"An Experimental Study on the Effects of Control Frame and View in Robot Teleoperation"*](https://www.tandfonline.com/doi/epdf/10.1080/10447318.2026.2651379?needAccess=true)](https://www.tandfonline.com/doi/epdf/10.1080/10447318.2026.2651379?needAccess=true), visual-motor misalignment causes immense disorientation. The operator must perform mental rotation matrix transformations in real-time, leading to frequent collisions. Recent studies also confirm this: failing to correct the reference frame for an Eye-in-Hand camera increases task completion time, increases unsteadiness by almost 50%, and raises the operator's mental stress by over 60%.
 
 ### 3. Solution: Dynamic Reference Frame Switching
-To resolve this issue, the project implements an algorithm for dynamic reference frame transformation from the rigid Robot Frame to the View/Tool Frame. This approach aligns with the latest **Shared Control** paradigms. Inspired by architectures presented in top-tier conferences like IEEE ICRA, the system divides the workload: the human decides on vectors and direction in an intuitive visual space, and the algorithm calculates the required transformations (Twists) into the robot's base frame on the fly, ensuring safe and smooth movement.
+To resolve this issue, the project implements an algorithm for dynamic reference frame transformation from the rigid Robot Frame to the View/Tool Frame. This approach aligns with the latest **Shared Control** paradigms. Human decides on vectors and direction in an intuitive visual space, and the algorithm calculates the required transformations (Twists) into the robot's base frame on the fly, ensuring safe and smooth movement.
 
 ---
 
@@ -44,11 +44,25 @@ The controller architecture is based on two modes that the operator can switch o
 * Calculated safe joint angular velocity commands ($\dot{q}$), sent directly to the robot's `joint_group_velocity_controller`.
 
 ---
+## 🎯 Proposed Milestones
 
+### 1. First Milestone (System Architecture & Baseline Kinematics)
+* Preparation of the ROS workspace, node architecture, and launch files.
+* Integration of the Kinova Gen3 hardware and Gazebo/Mock simulation environments.
+* Mathematical derivation and initial implementation of Forward Kinematics and the baseline Jacobian matrix ($J_{base}$).
+* Achieving basic Cartesian teleoperation of the physical/simulated arm via joypad (open-loop velocity control).
+
+### 2. Project Completion (Advanced Control, Safety & Evaluation)
+* Implementation of the dynamic Reference Frame Switching logic using rotation matrices ($R_{tool}^{base}$).
+* Upgrade of the open-loop control to a Closed-Loop Inverse Kinematics (CLIK) architecture to eliminate numerical drift.
+* Integration of the Damped Least Squares (DLS) algorithm for singularity avoidance.
+* Comprehensive performance testing on both simulated and physical robots, including the evaluation of teleoperation improvement and cognitive load reduction.
+* 
+---
 ## 🚀 Dependencies & Setup
 
-* **OS:** Ubuntu 20.04 / 22.04
-* **Middleware:** ROS Noetic / ROS 2 (Humble)
+* **OS:** Ubuntu 22.04
+* **Middleware:** ROS 2 Humble
 * **Robot API:** Kortex API (for Kinova Gen3)
 * **Math Libraries:** `numpy`, `MoveIt!` 
 
