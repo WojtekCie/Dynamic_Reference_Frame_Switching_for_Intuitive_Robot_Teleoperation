@@ -12,6 +12,7 @@ In tasks requiring high precision and direct environmental contact (e.g., peg-in
 
 ### 2. The Problem of Camera Frame Misalignment
 Despite the advantages of an arm-mounted camera, directly implementing an Eye-in-Hand view while leaving the control frame (joystick) mapped to the **Robot Base Frame** leads to drastic performance degradation. 
+
 As explicitly proven by the authors in the article *"An Experimental Study on the Effects of Control Frame and View in Robot Teleoperation"*, visual-motor misalignment causes immense disorientation. The operator must perform mental rotation matrix transformations in real-time, leading to frequent collisions. Recent studies also confirm this: failing to correct the reference frame for an Eye-in-Hand camera increases task completion time, increases unsteadiness by almost 50%, and raises the operator's mental stress by over 60%.
 
 ### 3. Solution: Dynamic Reference Frame Switching
@@ -45,12 +46,10 @@ The controller architecture is based on two modes that the operator can switch o
 ---
 
 ## 🚀 Dependencies & Setup
+
 * **OS:** Ubuntu 20.04 / 22.04
 * **Middleware:** ROS Noetic / ROS 2 (Humble)
 * **Robot API:** Kortex API (for Kinova Gen3)
-* **Math Libraries:** `numpy`, `pinocchio`, or `MoveIt!` Core (for solving kinematics based on the URDF file).
-
-*(Add your specific `roslaunch` or `ros2 run` instructions here depending on your final implementation)*
+* **Math Libraries:** `numpy`, `MoveIt!` 
 
 ---
-*Project Authors:* [Your Name and Surname]
