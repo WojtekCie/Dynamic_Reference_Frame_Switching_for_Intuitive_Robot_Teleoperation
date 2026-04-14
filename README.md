@@ -1,56 +1,56 @@
 # Advanced Teleoperation Control for Redundant Manipulators (Kinova Gen3)
 
-## 📌 Project Overview / Opis Projektu
-Projekt skupia się na stworzeniu zaawansowanego algorytmu teleoperacji dla manipulatorów robotycznych (6-DOF oraz 7-DOF Kinova Gen3). Głównym celem jest redukcja obciążenia poznawczego (cognitive load) operatora oraz poprawa precyzji w skomplikowanych zadaniach manipulacyjnych realizowanych na odległość. 
+## 📌 Project Overview
+This project focuses on developing an advanced teleoperation algorithm for robotic manipulators (specifically 6-DOF and 7-DOF Kinova Gen3). The primary goal is to reduce the operator's cognitive load and improve precision in complex, remote manipulation tasks. 
 
-System implementuje zamkniętą pętlę kinematyki odwrotnej (**CLIK**), dynamiczną transformację układów odniesienia w locie (**Reference Frame Switching**) oraz matematyczne omijanie osobliwości za pomocą metody **Damped Least Squares (DLS)**.
+The system implements Closed-Loop Inverse Kinematics (**CLIK**), dynamic on-the-fly **Reference Frame Switching**, and mathematical singularity avoidance using the **Damped Least Squares (DLS)** method.
 
 ## 📖 Theoretical Background & Motivation
 
-### 1. Przewaga konfiguracji Eye-in-Hand w teleoperacji precyzyjnej
-W zadaniach wymagających wysokiej precyzji i wchodzenia w bezpośredni kontakt ze środowiskiem (np. *peg-in-hole*, obsługa paneli, chwytanie nieregularnych obiektów), teleoperacja osiąga najlepsze wyniki przy zastosowaniu kamery w konfiguracji **Eye-in-Hand** (kamera zamontowana bezpośrednio na efektorze końcowym). Konfiguracja ta pozwala na całkowite uniknięcie problemu okluzji (zasłaniania widoku przez ramię robota) i umożliwia niezwykle intuicyjne sterowanie oraz obserwację środowiska pod różnymi kątami.
+### 1. The Advantage of Eye-in-Hand Configuration in Precision Teleoperation
+In tasks requiring high precision and direct environmental contact (e.g., peg-in-hole, panel operation, grasping irregular objects), teleoperation achieves the best results using an **Eye-in-Hand** camera configuration (camera mounted directly on the end-effector). This setup completely avoids the occlusion problem (the robot arm blocking the view) and allows for highly intuitive control and environmental observation from various angles.
 
-### 2. Problem niedopasowania układów współrzędnych (Camera Frame Misalignment)
-Mimo zalet kamery na chwytaku, bezpośrednie wdrożenie podglądu *Eye-in-Hand* przy pozostawieniu układu sterowania (joysticka) w przestrzeni bazy robota (*Robot Base Frame*) prowadzi do drastycznej degradacji wyników. 
-Jak dobitnie udowadniają autorzy w artykule *"An Experimental Study on the Effects of Control Frame and View in Robot Teleoperation"*, niedopasowanie przestrzeni wizyjnej do przestrzeni sterowania (tzw. *visual-motor misalignment*) wywołuje ogromną dezorientację. Operator musi w czasie rzeczywistym dokonywać w głowie transformacji macierzy rotacji, co prowadzi do częstych kolizji. Zjawisko to potwierdzają również nowsze badania: brak korekty układu odniesienia dla kamery *Eye-in-Hand* wydłuża czas wykonania zadania, zwiększa drgania (unsteadiness) o niemal 50% i podnosi stres mentalny operatora o ponad 60%.
+### 2. The Problem of Camera Frame Misalignment
+Despite the advantages of an arm-mounted camera, directly implementing an Eye-in-Hand view while leaving the control frame (joystick) mapped to the **Robot Base Frame** leads to drastic performance degradation. 
+As explicitly proven by the authors in the article *"An Experimental Study on the Effects of Control Frame and View in Robot Teleoperation"*, visual-motor misalignment causes immense disorientation. The operator must perform mental rotation matrix transformations in real-time, leading to frequent collisions. Recent studies also confirm this: failing to correct the reference frame for an Eye-in-Hand camera increases task completion time, increases unsteadiness by almost 50%, and raises the operator's mental stress by over 60%.
 
-### 3. Rozwiązanie: Dynamic Reference Frame Switching
-Aby rozwiązać powyższy problem, w projekcie wdrożono algorytm dynamicznej transformacji układu odniesienia ze sztywnej ramy robota (*Robot Frame*) na przestrzeń widzenia kamery (*View/Tool Frame*). Zastosowane podejście wpisuje się w najnowsze paradygmaty **Shared Control** (współdzielenia kontroli). Inspirując się architekturami przedstawionymi m.in. w publikacji z konferencji IEEE ICRA (*"Interactive Teleoperation Interface for Semi-autonomous Control of Robot Arms"*), system rozdziela zadania: człowiek decyduje o wektorach i kierunku w intuicyjnej dla siebie przestrzeni wizyjnej, a algorytm w locie przelicza wymagane transformacje (Twist) na bazę robota, gwarantując bezpieczny, płynny ruch.
+### 3. Solution: Dynamic Reference Frame Switching
+To resolve this issue, the project implements an algorithm for dynamic reference frame transformation from the rigid Robot Frame to the View/Tool Frame. This approach aligns with the latest **Shared Control** paradigms. Inspired by architectures presented in top-tier conferences like IEEE ICRA, the system divides the workload: the human decides on vectors and direction in an intuitive visual space, and the algorithm calculates the required transformations (Twists) into the robot's base frame on the fly, ensuring safe and smooth movement.
 
 ---
 
 ## ⚙️ System Architecture
 
-Architektura kontrolera bazuje na dwóch trybach, które operator może przełączać w locie:
+The controller architecture is based on two modes that the operator can switch on the fly:
 
-* **Base Frame Mode (Przestrzeń Bazy):** Polecenia prędkości z joypada są interpretowane względem globalnej podstawy robota. Tryb optymalny do makro-ruchów (np. szybkie zbliżenie ramienia w rejon obszaru roboczego na podstawie widoku z kamery zewnętrznej).
-* **Tool Frame / View Mode (Przestrzeń Efektora):** Polecenia z joypada są matematycznie transformowane (z użyciem macierzy rotacji $R_{tool}^{base}$) do przestrzeni kamery *Eye-in-Hand*. Ruch w przód na joypadzie zawsze oznacza ruch "w głąb ekranu", niezależnie od aktualnego wygięcia ramienia. Tryb kluczowy do precyzyjnych zadań kontaktowych.
+* **Base Frame Mode:** Velocity commands from the joypad are interpreted relative to the robot's global base. This is optimal for macro-movements (e.g., rapid approach of the arm to the workspace based on an external mast-camera view).
+* **Tool Frame / View Mode:** Joypad commands are mathematically transformed (using the $R_{tool}^{base}$ rotation matrix) to the Eye-in-Hand camera space. A forward push on the joypad always means moving "deeper into the screen," regardless of the arm's current orientation. This is crucial for precise contact tasks.
 
-### Warstwa bezpieczeństwa matematycznego
-1. **CLIK (Closed-Loop Inverse Kinematics):** Aby zniwelować dryf numeryczny wynikający z całkowania prędkości, system został wyposażony w sprzężenie zwrotne kontrolujące uchyb pozycji w otwartej przestrzeni kartezjańskiej.
-2. **DLS (Damped Least Squares):** W celu zabezpieczenia sprzętu przed nieskończonymi skokami prędkości stawów w okolicach osobliwości (singularity) np. przy pełnym wyprostowaniu ramienia, klasyczna inwersja Jakobianu ($J^{-1}$) została zastąpiona odporną pseudo-odwrotnością z algorytmem Levenberga-Marquardta.
+### Mathematical Safety Layer
+1. **CLIK (Closed-Loop Inverse Kinematics):** To eliminate numerical drift resulting from open-loop velocity integration, the system features a feedback loop controlling the position error in the Cartesian space.
+2. **DLS (Damped Least Squares):** To protect the hardware from infinite joint velocity spikes near singularities (e.g., full arm extension), the classical Jacobian inversion ($J^{-1}$) is replaced with a robust pseudo-inverse using the Levenberg-Marquardt algorithm.
 
 ---
 
 ## 🎛️ Inputs and Outputs
 
-**Wejścia do systemu (Inputs):**
-* Zadany wektor Twist (prędkości liniowe i kątowe) z joypada: $V_{pad} = [v_x, v_y, v_z, \omega_x, \omega_y, \omega_z]^T$
-* Dyskretny sygnał zmiany trybu pracy (Przycisk: Base Frame / Tool Frame)
-* Stan układu robota (pozycja przegubów $q$) do aktualizacji macierzy Jakobianu i kinematyki prostej.
+**System Inputs:**
+* Desired Twist vector (linear and angular velocities) from the joypad: $V_{pad} = [v_x, v_y, v_z, \omega_x, \omega_y, \omega_z]^T$
+* Discrete mode switch signal (Button trigger: Base Frame / Tool Frame)
+* Robot state (joint positions $q$) to update the Jacobian matrix and forward kinematics in real-time.
 
-**Wyjścia z systemu (Outputs):**
-* Wyliczony wektor bezpiecznych prędkości kątowych na stawy ($\dot{q}$), wysyłany bezpośrednio do `joint_group_velocity_controller` robota.
+**System Outputs:**
+* Calculated safe joint angular velocity commands ($\dot{q}$), sent directly to the robot's `joint_group_velocity_controller`.
 
 ---
 
-## 🚀 Wymagania i Uruchomienie (Dependencies)
+## 🚀 Dependencies & Setup
 * **OS:** Ubuntu 20.04 / 22.04
 * **Middleware:** ROS Noetic / ROS 2 (Humble)
-* **Robot API:** Kortex API (dla Kinova Gen3)
-* **Math Libraries:** `numpy`, `pinocchio` lub `MoveIt!` Core (do rozwiązywania kinematyki na podstawie pliku URDF).
+* **Robot API:** Kortex API (for Kinova Gen3)
+* **Math Libraries:** `numpy`, `pinocchio`, or `MoveIt!` Core (for solving kinematics based on the URDF file).
 
-*(Dodaj tutaj swoje własne instrukcje `roslaunch` lub `ros2 run` w zależności od implementacji)*
+*(Add your specific `roslaunch` or `ros2 run` instructions here depending on your final implementation)*
 
 ---
-*Autorzy projektu:* [Twoje Imię i Nazwisko]
+*Project Authors:* [Your Name and Surname]
