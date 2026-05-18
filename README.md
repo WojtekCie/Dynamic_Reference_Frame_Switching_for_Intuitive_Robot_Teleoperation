@@ -40,3 +40,13 @@ Projekt implementuje system teleoperacji robota Kinova Gen3 ze sprzężeniem wiz
 - Podstawowe sterowanie z poziomu terminala
 Projekt badawczo-rozwojowy – teleoperacja robotów manipulacyjnych.
 
+## Sites to look on
+Jak połączyć Mujoco z ROS2 Control
+https://moveit.picknik.ai/main/doc/tutorials/visualizing_in_rviz/visualizing_in_rviz.html
+Toutorial z MoveIt:
+https://github.com/moveit/mujoco_ros2_control
+model kinovy:
+https://github.com/google-deepmind/mujoco_menagerie/tree/main/kinova_gen3
+Jakieśprzykłądy z Mujoco:
+https://github.com/sangteak601/mujoco_ros2_control
+https://github.com/sangteak601/mujoco_ros2_control_examples
