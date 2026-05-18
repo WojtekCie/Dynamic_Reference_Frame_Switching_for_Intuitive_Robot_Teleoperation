@@ -50,3 +50,5 @@ https://github.com/google-deepmind/mujoco_menagerie/tree/main/kinova_gen3
 Jakieśprzykłądy z Mujoco:
 https://github.com/sangteak601/mujoco_ros2_control
 https://github.com/sangteak601/mujoco_ros2_control_examples
+Przykład z realtime:
+https://moveit.picknik.ai/humble/doc/examples/realtime_servo/realtime_servo_tutorial.html
